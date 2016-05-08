@@ -7,6 +7,7 @@ import numpy as np
 
 from util.activation_functions import Activation
 from model.classifier import Classifier
+from report.evaluator import Evaluator
 
 logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s',
                     level=logging.DEBUG,
@@ -47,6 +48,8 @@ class Perceptron(Classifier):
         # around 0 and 0.1
         self.weight = np.random.rand(self.trainingSet.input.shape[1])/10
 
+        self.evaluator = Evaluator()
+
     def train(self, verbose=True):
         """Train the perceptron with the perceptron learning algorithm.
 
@@ -55,10 +58,37 @@ class Perceptron(Classifier):
         verbose : boolean
             Print logging messages with validation accuracy if verbose is True.
         """
+        #self.learnBatch(verbose)
+        self.learnStochastic(verbose)
 
-        # Here you have to implement the Perceptron Learning Algorithm
-        # to change the weights of the Perceptron
-        pass
+    def learnBatch(self, verbose=True):
+        for _ in range(self.epochs):
+            batchUpdate = [28 * 28]
+            for label, data in zip(self.trainingSet.label, self.trainingSet.input):
+                if label != self.classify(data):
+                    if label:
+                        batchUpdate += data
+                    else:
+                        batchUpdate -= data
+            self.weight += self.learningRate * batchUpdate
+
+            if verbose:
+                self.evaluator.printAccuracy(self.validationSet, self.evaluate())
+
+
+    def learnStochastic(self, verbose=True):
+        for _ in range(self.epochs):
+            for label, data in zip(self.trainingSet.label, self.trainingSet.input):
+                if label != self.classify(data):
+                    if label:
+                        self.weight += self.learningRate * data
+                    else:
+                        self.weight -= self.learningRate * data
+
+            if verbose:
+                self.evaluator.printAccuracy(self.validationSet, self.evaluate())
+
+
 
     def classify(self, testInstance):
         """Classify a single instance.
@@ -75,7 +105,10 @@ class Perceptron(Classifier):
         # Here you have to implement the classification for one instance,
         # i.e., return True if the testInstance is recognized as a 7,
         # False otherwise
-        pass
+        if self.fire(testInstance) > 0.0:
+            return True
+        else:
+            return False
 
     def evaluate(self, test=None):
         """Evaluate a whole dataset.
