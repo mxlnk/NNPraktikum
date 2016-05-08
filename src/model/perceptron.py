@@ -58,12 +58,12 @@ class Perceptron(Classifier):
         verbose : boolean
             Print logging messages with validation accuracy if verbose is True.
         """
-        #self.learnBatch(verbose)
-        self.learnStochastic(verbose)
+        self.learnBatch(verbose)
+        #self.learnStochastic(verbose)
 
     def learnBatch(self, verbose=True):
         for _ in range(self.epochs):
-            batchUpdate = [28 * 28]
+            batchUpdate = np.zeros(28 * 28)
             for label, data in zip(self.trainingSet.label, self.trainingSet.input):
                 if label != self.classify(data):
                     if label:
