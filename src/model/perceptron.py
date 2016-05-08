@@ -63,7 +63,7 @@ class Perceptron(Classifier):
 
     def learnBatch(self, verbose=True):
         for _ in range(self.epochs):
-            batchUpdate = np.zeros(28 * 28)
+            batchUpdate = np.zeros(self.trainingSet.input.shape[1])
             for label, data in zip(self.trainingSet.label, self.trainingSet.input):
                 if label != self.classify(data):
                     if label:
