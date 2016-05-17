@@ -4,7 +4,7 @@
 from data.mnist_seven import MNISTSeven
 from model.stupid_recognizer import StupidRecognizer
 from model.perceptron import Perceptron
-#from model.logistic_regression import LogisticRegression
+from model.logistic_regression import LogisticRegression
 from report.evaluator import Evaluator
 
 
@@ -13,12 +13,18 @@ def main():
     myStupidClassifier = StupidRecognizer(data.trainingSet,
                                           data.validationSet,
                                           data.testSet)
-    # Uncomment this to make your Perceptron evaluated
+
     myPerceptronClassifier = Perceptron(data.trainingSet,
-                                         data.validationSet,
-                                         data.testSet,
-                                         learningRate=0.005,
-                                         epochs=30)
+                                        data.validationSet,
+                                        data.testSet,
+                                        learningRate=0.005,
+                                        epochs=10)
+    # Uncomment this to run Logistic Neuron Layer
+#     myLRClassifier = LogisticRegression(data.trainingSet,
+#                                         data.validationSet,
+#                                         data.testSet,
+#                                         learningRate=0.005,
+#                                         epochs=30)
 
     # Train the classifiers
     print("=========================")
@@ -32,11 +38,15 @@ def main():
     myPerceptronClassifier.train()
     print("Done..")
 
+#     print("\nLogistic Regression has been training..")
+#     myLRClassifier.train()
+#     print("Done..")
+
     # Do the recognizer
     # Explicitly specify the test set to be evaluated
     stupidPred = myStupidClassifier.evaluate()
-    # Uncomment this to make your Perceptron evaluated
     perceptronPred = myPerceptronClassifier.evaluate()
+#     lrPred = myLRClassifier.evaluate()
 
     # Report the result
     print("=========================")
@@ -48,11 +58,12 @@ def main():
 
     print("\nResult of the Perceptron recognizer:")
     # evaluator.printComparison(data.testSet, perceptronPred)
-    # Uncomment this to make your Perceptron evaluated
     evaluator.printAccuracy(data.testSet, perceptronPred)
 
-    # eval.printConfusionMatrix(data.testSet, pred)
-    # eval.printClassificationResult(data.testSet, pred, target_names)
+#     print("\nResult of the Logistic Regression recognizer:")
+#     # evaluator.printComparison(data.testSet, perceptronPred)
+#     evaluator.printAccuracy(data.testSet, lrPred)
+
 
 if __name__ == '__main__':
     main()
