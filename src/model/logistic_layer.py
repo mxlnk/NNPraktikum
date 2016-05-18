@@ -47,7 +47,7 @@ class LogisticLayer():
 
         self.outp = np.zeros(n_out, dtype=float)
         self.deltas = np.zeros(n_out, dtype=float)
-        self.inp = np.zeros(n_in+1, dtype=float)   # inp[0] is bias -> == 1
+        self.inp = np.ones(n_in+1, dtype=float)   # inp[0] is bias -> == 1
 
         # You can have better initialization here
         if weights is None:
@@ -79,6 +79,7 @@ class LogisticLayer():
 
         # Here you have to implement the forward pass
         # fire each neuron
+        self.inp = inp
         self.outp = self._fire(inp)
 
     def computeDerivative(self, nextDerivatives, nextWeights):
