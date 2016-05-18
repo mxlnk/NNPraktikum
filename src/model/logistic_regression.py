@@ -4,7 +4,9 @@ import sys
 import logging
 
 import numpy as np
+from sklearn.metrics import accuracy_score
 
+from model.logistic_layer import LogisticLayer
 from util.activation_functions import Activation
 from model.classifier import Classifier
 
@@ -44,6 +46,12 @@ class LogisticRegression(Classifier):
         self.validationSet = valid
         self.testSet = test
 
+        self.neuron = LogisticLayer(
+            n_in = len(train.input[0]),
+            n_out = 1,
+            is_classifier_layer = True
+        )
+
     def train(self, verbose=True):
         """Train the Logistic Regression.
 
@@ -53,9 +61,26 @@ class LogisticRegression(Classifier):
             Print logging messages with validation accuracy if verbose is True.
         """
 
-        # Here you have to implement training method "epochs" times
-        # Please using LogisticLayer class
-        pass
+        for epoch in range(self.epochs):
+            if verbose:
+                print("Training epoch {0}/{1}.."
+                      .format(epoch + 1, self.epochs))
+
+            self._train_one_epoch(verbose)
+
+            if verbose:
+                accuracy = accuracy_score(self.validationSet.label,
+                                          self.evaluate(self.validationSet))
+                print("Accuracy on validation: {0:.2f}%"
+                      .format(accuracy*100))
+                print("-----------------------------")
+
+    def _train_one_epoch(self, verbose=True):
+        for instance, label in zip(self.trainingSet.input, self.trainingSet.label):
+            biasedInput = np.append([1.0], instance)
+            self.neuron.forward(biasedInput)
+            self.neuron.computeDerivative(np.array([label]), None)
+            self.neuron.updateWeights(self.learningRate)
 
     def classify(self, testInstance):
         """Classify a single instance.
@@ -71,7 +96,9 @@ class LogisticRegression(Classifier):
         """
 
         # Here you have to implement classification method given an instance
-        pass
+        biasedInput = np.append([1.0], testInstance)
+        self.neuron.forward(biasedInput)
+        return self.neuron.outp[0] > 0.5
 
     def evaluate(self, test=None):
         """Evaluate a whole dataset.
