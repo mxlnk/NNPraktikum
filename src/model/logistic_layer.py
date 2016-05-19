@@ -45,9 +45,10 @@ class LogisticLayer():
         self.n_in = n_in
         self.n_out = n_out
 
-        self.outp = np.zeros(n_out, dtype=float)
-        self.deltas = np.zeros(n_out, dtype=float)
-        self.inp = np.ones(n_in+1, dtype=float)   # inp[0] is bias -> == 1
+        self.outp = np.ndarray((n_out,))
+        self.deltas = np.zeros((n_out,))
+        self.inp = np.ndarray((n_in+1,))
+        self.inp[0] = 1 # bias
 
         # You can have better initialization here
         if weights is None:
@@ -69,18 +70,18 @@ class LogisticLayer():
         Parameters
         ----------
         inp : ndarray
-            a numpy array of size (n_in + 1) containing the input of the layer
+            a numpy ndarray of size (n_in,) containing the input of the layer
 
         Change outp
         -------
         outp: array
-            a numpy array of size (n_out) containing the output of the layer
+            a numpy ndarray of size (n_out,) containing the output of the layer
         """
 
         # Here you have to implement the forward pass
         # fire each neuron
-        self.inp = inp
-        self.outp = self._fire(inp)
+        self.inp[1:] = inp  # keep bias
+        self.outp = self._fire(self.inp)
 
     def computeDerivative(self, nextDerivatives, nextWeights):
         """
@@ -92,24 +93,15 @@ class LogisticLayer():
             a numpy array containing the derivatives from next layer
         nextWeights : ndarray
             a numpy array containing the weights from next layer
+            ATTENTION: WEIGHTS FOR BIAS INCLUDED
 
         Change deltas
         -------
         deltas: ndarray
             a numpy array containing the partial derivatives on this layer
         """
-
-        #output? nextDerivatives[neuron] == expectedOutput of neuron
-        if (self.is_classifier_layer):
-            for neuron in range(self.n_out):
-                self.deltas[neuron] = self.outp[neuron] * (1.0 - self.outp[neuron]) * (nextDerivatives[neuron] - self.outp[neuron])
-        # hidden/input?
-        else:
-            for neuron in range(self.n_out):
-                downstreamSum = 0.0
-                for downstream in range(len(nextDerivatives)):
-                    downstreamSum = nextDerivatives[downstream] * nextWeights[neuron, downstream]
-                self.deltas[neuron] = self.outp[neuron] * (1.0 - self.outp[neuron]) * downstreamSum
+        # fully connected, skip bias weights
+        self.deltas = self.outp * (1.0 - self.outp) * map(sum, nextDerivatives * nextWeights[1:,])
 
     def updateWeights(self, learningRate):
         """
@@ -117,11 +109,8 @@ class LogisticLayer():
         """
 
         # Here the implementation of weight updating mechanism
-        for neuron in range(self.n_out):
-            for inp in range(self.n_in + 1):
-                self.weights[inp, neuron] = self.weights[inp, neuron] + learningRate * self.deltas[neuron] * self.inp[inp]
+        for i in range(self.n_in + 1):
+            self.weights[i,] += learningRate * self.deltas * self.inp[i]
 
-    # fire the neuron with number given in neuron, with input
     def _fire(self, inp):
-        # return self.activation(np.dot(np.array(inp), self.weights))
-        return Activation.sigmoid(np.dot(np.array(inp), self.weights))
+        return self.activation(np.dot(np.array(inp), self.weights))

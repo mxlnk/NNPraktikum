@@ -77,9 +77,10 @@ class LogisticRegression(Classifier):
 
     def _train_one_epoch(self, verbose=True):
         for instance, label in zip(self.trainingSet.input, self.trainingSet.label):
-            biasedInput = np.append([1.0], instance)
-            self.neuron.forward(biasedInput)
-            self.neuron.computeDerivative(np.array([label]), None)
+            self.neuron.forward(instance)
+            # passing in error as deltas, and constant 1 weight
+            # this should cause derivative to be calculated like outputlayer
+            self.neuron.computeDerivative(label - self.neuron.outp, np.array([[0.0], [1.0]]))
             self.neuron.updateWeights(self.learningRate)
 
     def classify(self, testInstance):
@@ -96,8 +97,7 @@ class LogisticRegression(Classifier):
         """
 
         # Here you have to implement classification method given an instance
-        biasedInput = np.append([1.0], testInstance)
-        self.neuron.forward(biasedInput)
+        self.neuron.forward(testInstance)
         return self.neuron.outp[0] > 0.5
 
     def evaluate(self, test=None):
