@@ -5,6 +5,7 @@ import logging
 
 import numpy as np
 from sklearn.metrics import accuracy_score
+import matplotlib.pyplot as plt
 
 from model.logistic_layer import LogisticLayer
 from util.activation_functions import Activation
@@ -61,6 +62,8 @@ class LogisticRegression(Classifier):
             Print logging messages with validation accuracy if verbose is True.
         """
 
+        accuracies = [0]
+
         for epoch in range(self.epochs):
             if verbose:
                 print("Training epoch {0}/{1}.."
@@ -74,6 +77,10 @@ class LogisticRegression(Classifier):
                 print("Accuracy on validation: {0:.2f}%"
                       .format(accuracy*100))
                 print("-----------------------------")
+                accuracies.append(accuracy)
+
+        plt.plot(accuracies)
+        plt.show()
 
     def _train_one_epoch(self, verbose=True):
         for instance, label in zip(self.trainingSet.input, self.trainingSet.label):
