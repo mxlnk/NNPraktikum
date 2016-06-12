@@ -5,6 +5,7 @@ from util.activation_functions import Activation
 from util.loss_functions import CrossEntropyError
 from model.logistic_layer import LogisticLayer
 from model.classifier import Classifier
+from sklearn.metrics import accuracy_score
 
 
 class MultilayerPerceptron(Classifier):
@@ -106,20 +107,29 @@ class MultilayerPerceptron(Classifier):
         """
         # TODO flexibility depending on self.cost
         error_func = CrossEntropyError()
-        self.error = error_func.calculate_error(target, self._get_output_layer().outp)
+        assert (target.shape == self._get_output_layer().outp.shape)
+        self.error = target - self._get_output_layer().outp
+        return error_func.calculate_error(target, self._get_output_layer().outp)
 
     def _update_weights(self):
         """
         Update the weights of the layers by propagating back the error
         """
+        # print self._get_output_layer().weights
+        # print "-----------------------------------------"
         up_layer = None
-        for layer in self.layers[::-1]:
+        for layer_num in reversed(range(len(self.layers))):
+            layer = self._get_layer(layer_num)
             if up_layer is None: # output
                 layer.computeDerivative(self.error, np.ones(self._get_output_layer().n_out, dtype=float))
             else:
-                layer.computeDerivative(up_layer.deltas, up_layer.weights)
+                layer.computeDerivative(up_layer.deltas, up_layer.weights[1:,]) # removing bias weights
             layer.updateWeights(self.learning_rate)
             up_layer = layer
+            self.layers[layer_num] = layer
+
+        # print self._get_output_layer().weights
+        # print "############################################"
 
     def train(self, verbose=True):
         """Train the Multi-layer Perceptrons
