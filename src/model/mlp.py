@@ -1,7 +1,8 @@
 
 import numpy as np
 
-# from util.activation_functions import Activation
+from util.activation_functions import Activation
+from util.loss_functions import CrossEntropyError
 from model.logistic_layer import LogisticLayer
 from model.classifier import Classifier
 
@@ -63,17 +64,18 @@ class MultilayerPerceptron(Classifier):
         # Build up the network from specific layers
         # Here is an example of a MLP acting like the Logistic Regression
         self.layers = []
-        output_activation = "sigmoid"
-        self.layers.append(LogisticLayer(10, 1, None, output_activation, True))
+        self.layers.append(LogisticLayer(train.input.shape[1] - 1, 5, None, self.output_activation, True))
+        self.layers.append(LogisticLayer(5, 3, None, self.output_activation, True))
+        self.layers.append(LogisticLayer(3, 10, None, self.output_activation, True))
 
     def _get_layer(self, layer_index):
         return self.layers[layer_index]
 
     def _get_input_layer(self):
-        return self.get_layer(0)
+        return self._get_layer(0)
 
     def _get_output_layer(self):
-        return self.get_layer(-1)
+        return self._get_layer(-1)
 
     def _feed_forward(self, inp):
         """
@@ -87,8 +89,11 @@ class MultilayerPerceptron(Classifier):
         # Here you have to propagate forward through the layers
         # And remember the activation values of each layer
         """
-
-        pass
+        # TODO <- So activate twice?!
+        layer_inp = inp
+        for layer in self.layers:
+            layer.forward(layer_inp)
+            layer_inp = np.insert(layer.outp, 0, 1)
 
     def _compute_error(self, target):
         """
@@ -99,13 +104,22 @@ class MultilayerPerceptron(Classifier):
         ndarray :
             a numpy array (1,nOut) containing the output of the layer
         """
-        pass
+        # TODO flexibility depending on self.cost
+        error_func = CrossEntropyError()
+        self.error = error_func.calculate_error(target, self._get_output_layer().outp)
 
     def _update_weights(self):
         """
         Update the weights of the layers by propagating back the error
         """
-        pass
+        up_layer = None
+        for layer in self.layers[::-1]:
+            if up_layer is None: # output
+                layer.computeDerivative(self.error, np.ones(self._get_output_layer().n_out, dtype=float))
+            else:
+                layer.computeDerivative(up_layer.deltas, up_layer.weights)
+            layer.updateWeights(self.learning_rate)
+            up_layer = layer
 
     def train(self, verbose=True):
         """Train the Multi-layer Perceptrons
@@ -115,20 +129,42 @@ class MultilayerPerceptron(Classifier):
         verbose : boolean
             Print logging messages with validation accuracy if verbose is True.
         """
+        for epoch in range(self.epochs):
+            if verbose:
+                print("Training epoch {0}/{1}.."
+                      .format(epoch + 1, self.epochs))
 
-        pass
+            self._train_one_epoch()
+
+            if verbose:
+                accuracy = accuracy_score(self.validation_set.label,
+                                          self.evaluate(self.validation_set))
+                # Record the performance of each epoch for later usages
+                # e.g. plotting, reporting..
+                self.performances.append(accuracy)
+                print("Accuracy on validation: {0:.2f}%"
+                      .format(accuracy * 100))
+                print("-----------------------------")
 
     def _train_one_epoch(self):
         """
         Train one epoch, seeing all input instances
         """
-
-        pass
+        for img, label in zip(self.training_set.input, self.training_set.label):
+            target = np.zeros(10, dtype=float)
+            target[label] = 1.0
+            self._feed_forward(img)
+            self._compute_error(target)
+            self._update_weights()
 
     def classify(self, test_instance):
         # Classify an instance given the model of the classifier
         # You need to implement something here
-        return True
+
+        # assume one hot encoding, if same probability for several classes,
+        # class with smaller index is output
+        self._feed_forward(test_instance)
+        return np.argmax(self._get_output_layer().outp)
 
     def evaluate(self, test=None):
         """Evaluate a whole dataset.

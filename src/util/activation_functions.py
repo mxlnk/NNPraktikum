@@ -52,12 +52,12 @@ class Activation:
     @staticmethod
     def softmax(outp):
         # Here you have to code the softmax function
-        pass
+        return np.exp(outp) / np.sum(outp)
 
     @staticmethod
     def softmax_prime(outp):
         # Here you have to code the the derivative of softmax function
-        pass
+        return self.softmax(outp) * (1 - self.softmax(outp))
 
     @staticmethod
     def get_activation(function_name):
