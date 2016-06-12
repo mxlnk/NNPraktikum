@@ -65,9 +65,9 @@ class MultilayerPerceptron(Classifier):
         # Build up the network from specific layers
         # Here is an example of a MLP acting like the Logistic Regression
         self.layers = []
-        self.layers.append(LogisticLayer(train.input.shape[1] - 1, 5, None, self.output_activation, True))
-        self.layers.append(LogisticLayer(5, 3, None, self.output_activation, True))
-        self.layers.append(LogisticLayer(3, 10, None, self.output_activation, True))
+        self.layers.append(LogisticLayer(train.input.shape[1] - 1, 50, None, self.output_activation, True))
+        self.layers.append(LogisticLayer(50, 30, None, self.output_activation, True))
+        self.layers.append(LogisticLayer(30, 10, None, self.output_activation, True))
 
     def _get_layer(self, layer_index):
         return self.layers[layer_index]
@@ -90,46 +90,25 @@ class MultilayerPerceptron(Classifier):
         # Here you have to propagate forward through the layers
         # And remember the activation values of each layer
         """
-        # TODO <- So activate twice?!
         layer_inp = inp
         for layer in self.layers:
             layer.forward(layer_inp)
             layer_inp = np.insert(layer.outp, 0, 1)
 
-    def _compute_error(self, target):
-        """
-        Compute the total error of the network
-
-        Returns
-        -------
-        ndarray :
-            a numpy array (1,nOut) containing the output of the layer
-        """
-        # TODO flexibility depending on self.cost
-        error_func = CrossEntropyError()
-        assert (target.shape == self._get_output_layer().outp.shape)
-        self.error = target - self._get_output_layer().outp
-        return error_func.calculate_error(target, self._get_output_layer().outp)
-
-    def _update_weights(self):
+    def _feed_backward(self, target):
         """
         Update the weights of the layers by propagating back the error
         """
-        # print self._get_output_layer().weights
-        # print "-----------------------------------------"
         up_layer = None
-        for layer_num in reversed(range(len(self.layers))):
-            layer = self._get_layer(layer_num)
+        for layer in self.layers[::-1]:
             if up_layer is None: # output
-                layer.computeDerivative(self.error, np.ones(self._get_output_layer().n_out, dtype=float))
+                layer.deltas = target - layer.outp
             else:
                 layer.computeDerivative(up_layer.deltas, up_layer.weights[1:,]) # removing bias weights
-            layer.updateWeights(self.learning_rate)
             up_layer = layer
-            self.layers[layer_num] = layer
 
-        # print self._get_output_layer().weights
-        # print "############################################"
+        for layer in self.layers:
+            layer.updateWeights(self.learning_rate)
 
     def train(self, verbose=True):
         """Train the Multi-layer Perceptrons
@@ -164,8 +143,7 @@ class MultilayerPerceptron(Classifier):
             target = np.zeros(10, dtype=float)
             target[label] = 1.0
             self._feed_forward(img)
-            self._compute_error(target)
-            self._update_weights()
+            self._feed_backward(target)
 
     def classify(self, test_instance):
         # Classify an instance given the model of the classifier
