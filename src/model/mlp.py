@@ -66,8 +66,8 @@ class MultilayerPerceptron(Classifier):
         # Here is an example of a MLP acting like the Logistic Regression
         self.layers = []
         self.layers.append(LogisticLayer(train.input.shape[1] - 1, 50, None, self.output_activation, True))
-        self.layers.append(LogisticLayer(50, 30, None, self.output_activation, True))
-        self.layers.append(LogisticLayer(30, 10, None, self.output_activation, True))
+        # self.layers.append(LogisticLayer(50, 30, None, self.output_activation, True))
+        self.layers.append(LogisticLayer(50, 10, None, self.output_activation, True))
 
     def _get_layer(self, layer_index):
         return self.layers[layer_index]
